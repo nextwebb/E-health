@@ -3,37 +3,16 @@ import DoctorList from './DoctorList';
 import Profile from './profile';
 import avatar from './avatar.svg';
 import { Redirect } from 'react-router';
+import axios from 'axios';
 
-const Doctors = [
-  {
-    name: 'Don Williams',
-    occupation: 'Ganacologist',
-    avatar: avatar,
-    key: 1,
-    id: 1 
-  },
-  {
-    name: 'Don Williams',
-    occupation: 'Ganacologist',
-    key: 2,
-    avatar: avatar,
-    id: 2 
-  },
-  {
-    name: 'Don Williams',
-    occupation: 'Ganacologist',
-    key: 2,
-    avatar: avatar,
-    id: 2 
-  }
-]
 
 class Dashboard extends Component{
   constructor(props) {
     super(props);
 
     this.state={
-      date:''
+      date:'',
+      Doctors: []
     }
     this.grabDate = this.grabDate.bind(this);
     
@@ -46,9 +25,43 @@ class Dashboard extends Component{
     })
   } 
 
-  // componentDidMount() {
-  //   fetch('https://book-a-doc.herokuapp.com/api/v1/doctor/list') 
-  // }
+  componentDidMount() {
+    let data = sessionStorage.getItem('userData');
+    let token = JSON.parse(data).token;
+    let userId = JSON.parse(data).data._id;
+    console.log(JSON.parse(data));
+    this.setState({token, userId})
+    
+    axios.get('https://book-a-doc.herokuapp.com/api/v1/doctor/list', {
+      headers: {
+        'Authorization' : token 
+      }
+    })
+    .then(response => {
+      this.setState({Doctors : response.data.message})
+      console.log(this.state.Doctors)
+    })
+    .catch(error=> console.log(error));
+
+    let postData = {
+      userId
+    }
+try {
+  axios.post('https://book-a-doc.herokuapp.com/api/v1/doctor/list',
+  postData,
+ {
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization' : token
+  }
+})
+.then(response=>console.log(response))
+.catch(error=>console.log(error))
+} catch (error) {
+  console.log(error)
+}
+   
+  }
 
   render() {
     if (!sessionStorage.length) {
@@ -60,7 +73,7 @@ class Dashboard extends Component{
             <Profile />
             <h2>Find A Doctor</h2>
             <div className="doctors-cont">
-              <DoctorList state={this.state} Doctors={Doctors} grabDate={this.grabDate}/> 
+              <DoctorList state={this.state} grabDate={this.grabDate}/> 
             </div>
           </div>
         </>
